@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Banco de dados para o Auth Service
+  auth-db:
+    image: mysql:8.0
+    container_name: auth_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root12345
+      MYSQL_DATABASE: auth_db
+      MYSQL_USER: rodrigo
+      MYSQL_PASSWORD: 12345
+    ports:
+      - "3306:3306"
+    volumes:
+      - auth_db_data:/var/lib/mysql
+
+  # Banco de dados para o Task Service
+  task-db:
+    image: mysql:8.0
+    container_name: task_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root12345
+      MYSQL_DATABASE: task_db
+      MYSQL_USER: rodrigo
+      MYSQL_PASSWORD: 12345
+    ports:
+      - "3307:3306"
+    volumes:
+      - task_db_data:/var/lib/mysql
+
+volumes:
+  auth_db_data:
+  task_db_data:
