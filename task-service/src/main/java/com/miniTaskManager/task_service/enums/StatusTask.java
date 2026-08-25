@@ -1,4 +1,4 @@
-package main.java.com.miniTaskManager.task_service.enums;
+package com.miniTaskManager.task_service.enums;
 
 public enum StatusTask {
     PENDENTE,
