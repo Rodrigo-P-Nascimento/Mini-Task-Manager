@@ -5,7 +5,7 @@ import com.miniTaskManager.task_service.enums.StatusTask;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 public class TaskRequestDTO {
@@ -25,5 +25,5 @@ public class TaskRequestDTO {
     @NotNull(message = "O ID do time é obrigatório")
     private Long timeId;
     
-    private LocalDateTime dataTermino;
+    private LocalDate dataTermino;
 }

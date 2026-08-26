@@ -30,7 +30,7 @@ public class AuthService {
 
         userRepository.save(user);
         String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getNome());
-        return new AuthResponse(token, user.getId(), user.getNome(), user.getEmail());
+        return new AuthResponse(token, user.getId(), user.getEmail(), user.getNome());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -42,6 +42,16 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getNome());
-        return new AuthResponse(token, user.getId(), user.getNome(), user.getEmail());
+        return new AuthResponse(token, user.getId(), user.getEmail(), user.getNome());
+    }
+
+    public java.util.List<com.miniTaskManager.auth_service.dto.UserDTO> listUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> com.miniTaskManager.auth_service.dto.UserDTO.builder()
+                        .id(user.getId())
+                        .nome(user.getNome())
+                        .email(user.getEmail())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
     }
 }

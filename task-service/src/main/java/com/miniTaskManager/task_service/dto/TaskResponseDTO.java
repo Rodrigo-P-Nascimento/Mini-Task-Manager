@@ -5,6 +5,7 @@ import com.miniTaskManager.task_service.enums.StatusTask;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -18,5 +19,5 @@ public class TaskResponseDTO {
     private Long timeId;
     private String timeNome;
     private LocalDateTime dataCriacao;
-    private LocalDateTime dataTermino;
+    private LocalDate dataTermino;
 }

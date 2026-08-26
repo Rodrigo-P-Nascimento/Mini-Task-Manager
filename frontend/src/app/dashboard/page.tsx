@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { taskApi } from '@/services/api';
+import { taskApi, authApi } from '@/services/api';
 import { Table, Button, Tag, Select, Alert, Card, Space, Typography, Popconfirm, Input } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, LogoutOutlined } from '@ant-design/icons';
 
@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [responsavelFilter, setResponsavelFilter] = useState('');
+  const [usersMap, setUsersMap] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (!token && typeof window !== 'undefined') {
@@ -43,6 +44,20 @@ export default function DashboardPage() {
       if (!savedToken) {
         router.push('/login');
       }
+    } else if (token) {
+      const fetchUsers = async () => {
+        try {
+          const response = await authApi.get('/users');
+          const map: Record<number, string> = {};
+          response.data.forEach((u: any) => {
+            map[u.id] = u.nome;
+          });
+          setUsersMap(map);
+        } catch (err) {
+          console.error('Erro ao buscar usuários', err);
+        }
+      };
+      fetchUsers();
     }
   }, [token, router]);
 
@@ -134,6 +149,16 @@ export default function DashboardPage() {
       dataIndex: 'dataTermino',
       key: 'dataTermino',
       render: (text: string | null) => text ? text : 'Sem prazo',
+    },
+    {
+      title: 'Responsável',
+      dataIndex: 'responsavel',
+      key: 'responsavel',
+      render: (responsavelId: number | null) => {
+        if (!responsavelId) return <Text type="secondary">Sem responsável</Text>;
+        const nome = usersMap[responsavelId] || 'Desconhecido';
+        return <Text>{`[${responsavelId}] - ${nome}`}</Text>;
+      },
     },
     {
       title: 'Ações',

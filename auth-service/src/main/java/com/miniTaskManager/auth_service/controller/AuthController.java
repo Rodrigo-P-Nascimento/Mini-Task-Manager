@@ -25,4 +25,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<java.util.List<com.miniTaskManager.auth_service.dto.UserDTO>> listUsers() {
+        return ResponseEntity.ok(authService.listUsers());
+    }
 }
