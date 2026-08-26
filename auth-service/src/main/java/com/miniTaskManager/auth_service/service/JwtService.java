@@ -28,6 +28,7 @@ public class JwtService {
 
         return Jwts.builder()
                 .setClaims(claims)
+                .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
