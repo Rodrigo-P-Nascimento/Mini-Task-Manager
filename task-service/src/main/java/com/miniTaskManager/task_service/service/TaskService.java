@@ -80,6 +80,9 @@ public class TaskService {
 
     @Transactional(readOnly = true)
     public Page<TaskResponseDTO> listarComFiltros(StatusTask status, PriorityTask prioridade, Long responsavel, Pageable pageable) {
+        // Uso de JPA Specification para queries dinâmicas.
+        // Isso evita múltiplas queries ou concatenação insegura de SQL, 
+        // filtrando apenas pelos campos que foram passados como parâmetro de forma eficiente.
         Specification<Task> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -108,6 +111,8 @@ public class TaskService {
     }
 
     private void validarRegraConclusao(StatusTask status, Long responsavel) {
+        // Regra de Negócio Obrigatória (Desafio Técnico):
+        // Uma tarefa só pode ser marcada como "Concluída" se tiver um responsável atribuído.
         if (status == StatusTask.CONCLUIDA && responsavel == null) {
             throw new BusinessException("Uma tarefa só pode ser marcada como 'Concluída' se tiver um responsável atribuído.");
         }

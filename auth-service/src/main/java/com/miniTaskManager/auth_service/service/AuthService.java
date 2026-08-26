@@ -22,6 +22,8 @@ public class AuthService {
             throw new RuntimeException("E-mail já cadastrado.");
         }
 
+        // Boa Prática: A senha nunca deve ser salva em texto plano no banco.
+        // O PasswordEncoder garante a geração de um hash seguro (ex: BCrypt).
         User user = User.builder()
                 .nome(request.getNome())
                 .email(request.getEmail())
@@ -41,6 +43,9 @@ public class AuthService {
             throw new RuntimeException("Credenciais inválidas.");
         }
 
+        // Arquitetura Stateless: Geramos um JWT com as informações do usuário (claims)
+        // para que outros serviços (como o task-service) não precisem chamar este serviço
+        // novamente a cada requisição apenas para validar a sessão.
         String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getNome());
         return new AuthResponse(token, user.getId(), user.getEmail(), user.getNome());
     }
