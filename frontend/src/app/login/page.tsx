@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { authApi } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { Card, Input, Button, Alert, Typography, Form } from 'antd';
+import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
+
+const { Title, Text, Link } = Typography;
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -14,8 +18,7 @@ export default function LoginPage() {
 
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
     setLoading(true);
 
@@ -48,88 +51,85 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md border border-slate-200">
+      <Card className="w-full max-w-md shadow-md border-0 rounded-xl" bodyStyle={{ padding: '2rem' }}>
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-slate-800">Mini Task Manager</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <Title level={3} style={{ margin: 0, color: '#1e293b' }}>Mini Task Manager</Title>
+          <Text type="secondary">
             {isRegister ? 'Crie sua conta para começar' : 'Entre com suas credenciais'}
-          </p>
+          </Text>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            {error}
-          </div>
+          <Alert
+            message={error}
+            type="error"
+            showIcon
+            className="mb-4"
+          />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Form layout="vertical" onFinish={handleSubmit}>
           {isRegister && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Nome Completo
-              </label>
-              <input
-                type="text"
-                required
+            <Form.Item label="Nome Completo" required>
+              <Input
+                size="large"
+                prefix={<UserOutlined />}
+                placeholder="Seu nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
-                placeholder="Seu nome"
               />
-            </div>
+            </Form.Item>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              E-mail
-            </label>
-            <input
+          <Form.Item label="E-mail" required>
+            <Input
+              size="large"
               type="email"
-              required
+              prefix={<MailOutlined />}
+              placeholder="exemplo@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
-              placeholder="exemplo@email.com"
             />
-          </div>
+          </Form.Item>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Senha
-            </label>
-            <input
-              type="password"
-              required
+          <Form.Item label="Senha" required>
+            <Input.Password
+              size="large"
+              prefix={<LockOutlined />}
+              placeholder="Sua senha"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800"
-              placeholder="Sua senha"
             />
-          </div>
+          </Form.Item>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition disabled:opacity-50"
-          >
-            {loading ? 'Processando...' : isRegister ? 'Cadastrar' : 'Entrar'}
-          </button>
-        </form>
+          <Form.Item className="mb-2 mt-6">
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              block
+              loading={loading}
+              style={{ backgroundColor: '#2563eb' }}
+            >
+              {isRegister ? 'Cadastrar' : 'Entrar'}
+            </Button>
+          </Form.Item>
+        </Form>
 
-        <div className="mt-6 text-center text-sm text-slate-600">
-          {isRegister ? 'Já tem uma conta?' : 'Ainda não possui uma conta?'}{' '}
-          <button
-            type="button"
+        <div className="text-center mt-4">
+          <Text type="secondary">
+            {isRegister ? 'Já tem uma conta?' : 'Ainda não possui uma conta?'}
+          </Text>{' '}
+          <Link
             onClick={() => {
               setIsRegister(!isRegister);
               setError('');
             }}
-            className="text-blue-600 hover:underline font-medium"
           >
             {isRegister ? 'Fazer Login' : 'Cadastre-se'}
-          </button>
+          </Link>
         </div>
-      </div>
+      </Card>
     </main>
   );
 }

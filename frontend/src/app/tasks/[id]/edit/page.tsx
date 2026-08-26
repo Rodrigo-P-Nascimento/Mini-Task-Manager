@@ -4,6 +4,12 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { taskApi } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { Card, Input, Select, Button, Alert, Typography, Form, Space } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+
+const { Title } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
 interface Team {
   id: number;
@@ -62,8 +68,7 @@ export default function EditTaskPage({ params }: { params: Promise<{ id: string 
     }
   }, [token, taskId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
 
     if (status === 'CONCLUIDA' && !responsavel) {
@@ -107,156 +112,117 @@ export default function EditTaskPage({ params }: { params: Promise<{ id: string 
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm w-full max-w-2xl">
+      <Card className="w-full max-w-2xl shadow-sm border-slate-200 rounded-xl" bodyStyle={{ padding: '2rem' }}>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-bold text-slate-800">Editar Tarefa #{taskId}</h1>
-          <button
-            type="button"
+          <Title level={4} style={{ margin: 0, color: '#1e293b' }}>Editar Tarefa #{taskId}</Title>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
             onClick={() => router.push('/dashboard')}
-            className="text-sm text-slate-500 hover:text-slate-700"
           >
             Voltar
-          </button>
+          </Button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
+          <Alert
+            message={error}
+            type="error"
+            showIcon
+            className="mb-6"
+          />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Título *
-            </label>
-            <input
-              type="text"
-              required
+        <Form layout="vertical" onFinish={handleSubmit}>
+          <Form.Item label="Título" required>
+            <Input
+              size="large"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
-          </div>
+          </Form.Item>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Descrição
-            </label>
-            <textarea
+          <Form.Item label="Descrição">
+            <TextArea
               rows={3}
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </Form.Item>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item label="Status" required>
+              <Select size="large" value={status} onChange={setStatus}>
+                <Option value="PENDENTE">Pendente</Option>
+                <Option value="EM_ANDAMENTO">Em Andamento</Option>
+                <Option value="CONCLUIDA">Concluída</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item label="Prioridade" required>
+              <Select size="large" value={prioridade} onChange={setPrioridade}>
+                <Option value="BAIXA">Baixa</Option>
+                <Option value="MEDIA">Média</Option>
+                <Option value="ALTA">Alta</Option>
+              </Select>
+            </Form.Item>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Status *
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="PENDENTE">Pendente</option>
-                <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDA">Concluída</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Prioridade *
-              </label>
-              <select
-                value={prioridade}
-                onChange={(e) => setPrioridade(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="BAIXA">Baixa</option>
-                <option value="MEDIA">Média</option>
-                <option value="ALTA">Alta</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Time *
-              </label>
-              <select
-                value={timeId}
-                onChange={(e) => setTimeId(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
+            <Form.Item label="Time *" required>
+              <Select size="large" value={timeId} onChange={setTimeId}>
                 {times.map((t) => (
-                  <option key={t.id} value={t.id}>
+                  <Option key={t.id} value={String(t.id)}>
                     {t.nome}
-                  </option>
+                  </Option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </Form.Item>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                ID do Responsável
-              </label>
-              <div className="flex gap-2">
-                <input
+            <Form.Item label="ID do Responsável">
+              <Space.Compact style={{ width: '100%' }}>
+                <Input
+                  size="large"
                   type="number"
+                  placeholder="Sem responsável"
                   value={responsavel}
                   onChange={(e) => setResponsavel(e.target.value)}
-                  placeholder="Sem responsável"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {user?.id && (
-                  <button
-                    type="button"
-                    onClick={() => setResponsavel(String(user.id))}
-                    className="px-3 py-2 text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg whitespace-nowrap font-medium text-slate-700"
-                  >
+                  <Button size="large" onClick={() => setResponsavel(String(user.id))}>
                     Eu ({user.id})
-                  </button>
+                  </Button>
                 )}
-              </div>
-            </div>
+              </Space.Compact>
+            </Form.Item>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Data de Término (Prazo)
-            </label>
-            <input
+          <Form.Item label="Data de Término (Prazo)">
+            <Input
+              size="large"
               type="date"
               value={dataTermino}
               onChange={(e) => setDataTermino(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          </Form.Item>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => router.push('/dashboard')}
-              className="px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition"
-            >
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-4">
+            <Button size="large" onClick={() => router.push('/dashboard')}>
               Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              loading={loading}
+              style={{ backgroundColor: '#2563eb' }}
             >
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </button>
+              Salvar Alterações
+            </Button>
           </div>
-        </form>
-      </div>
+        </Form>
+      </Card>
     </div>
   );
 }

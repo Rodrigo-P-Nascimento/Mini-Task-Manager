@@ -4,6 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { taskApi } from '@/services/api';
+import { Table, Button, Tag, Select, Alert, Card, Space, Typography, Popconfirm, Input } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, LogoutOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 interface Task {
   id: number;
@@ -30,6 +35,7 @@ export default function DashboardPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [responsavelFilter, setResponsavelFilter] = useState('');
 
   useEffect(() => {
     if (!token && typeof window !== 'undefined') {
@@ -52,6 +58,7 @@ export default function DashboardPage() {
 
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.prioridade = priorityFilter;
+      if (responsavelFilter) params.responsavel = responsavelFilter;
 
       const response = await taskApi.get('/tasks', { params });
       setTasks(response.data.content);
@@ -61,7 +68,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, priorityFilter]);
+  }, [page, statusFilter, priorityFilter, responsavelFilter]);
 
   useEffect(() => {
     if (token) {
@@ -70,8 +77,6 @@ export default function DashboardPage() {
   }, [carregarTarefas, token]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Deseja realmente excluir esta tarefa?')) return;
-
     try {
       await taskApi.delete(`/tasks/${id}`);
       carregarTarefas();
@@ -80,178 +85,195 @@ export default function DashboardPage() {
     }
   };
 
+  const columns = [
+    {
+      title: 'Título',
+      dataIndex: 'titulo',
+      key: 'titulo',
+      render: (text: string, record: Task) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>{text}</div>
+          {record.descricao && (
+            <Text type="secondary" style={{ fontSize: '12px' }} ellipsis>
+              {record.descricao}
+            </Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Time',
+      dataIndex: 'timeNome',
+      key: 'timeNome',
+      render: (text: string) => text || 'Sem time',
+    },
+    {
+      title: 'Prioridade',
+      dataIndex: 'prioridade',
+      key: 'prioridade',
+      render: (prioridade: string) => {
+        let color = 'green';
+        if (prioridade === 'ALTA') color = 'red';
+        if (prioridade === 'MEDIA') color = 'orange';
+        return <Tag color={color}>{prioridade}</Tag>;
+      },
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        let color = 'default';
+        if (status === 'CONCLUIDA') color = 'success';
+        if (status === 'EM_ANDAMENTO') color = 'processing';
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      title: 'Prazo',
+      dataIndex: 'dataTermino',
+      key: 'dataTermino',
+      render: (text: string | null) => text ? text : 'Sem prazo',
+    },
+    {
+      title: 'Ações',
+      key: 'acoes',
+      align: 'right' as const,
+      render: (_: any, record: Task) => (
+        <Space size="small">
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => router.push(`/tasks/${record.id}/edit`)}
+            style={{ color: '#2563eb' }}
+          >
+            Editar
+          </Button>
+          <Popconfirm
+            title="Deseja excluir esta tarefa?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Sim"
+            cancelText="Não"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />}>
+              Excluir
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Mini Task Manager</h1>
-          <p className="text-xs text-slate-500">Gestão de tarefas em equipe</p>
+          <Title level={4} style={{ margin: 0, color: '#0f172a' }}>Mini Task Manager</Title>
+          <Text type="secondary" style={{ fontSize: '12px' }}>Gestão de tarefas em equipe</Text>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-slate-700">
-            Olá, <strong className="text-blue-600">{user?.nome || 'Usuário'}</strong>
-          </span>
-          <button
+          <Text>
+            Olá, <strong style={{ color: '#2563eb' }}>{user?.nome || 'Usuário'}</strong>
+          </Text>
+          <Button
+            icon={<LogoutOutlined />}
             onClick={logout}
-            className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-300 transition"
           >
             Sair
-          </button>
+          </Button>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 mb-6 shadow-sm flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-3 items-center">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(0);
-              }}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos os Status</option>
-              <option value="PENDENTE">Pendente</option>
-              <option value="EM_ANDAMENTO">Em Andamento</option>
-              <option value="CONCLUIDA">Concluída</option>
-            </select>
+        <Card bodyStyle={{ padding: '16px' }} className="mb-6 shadow-sm border-slate-200">
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <Space wrap>
+              <Select
+                value={statusFilter}
+                onChange={(val) => {
+                  setStatusFilter(val);
+                  setPage(0);
+                }}
+                style={{ width: 180 }}
+              >
+                <Option value="">Todos os Status</Option>
+                <Option value="PENDENTE">Pendente</Option>
+                <Option value="EM_ANDAMENTO">Em Andamento</Option>
+                <Option value="CONCLUIDA">Concluída</Option>
+              </Select>
 
-            <select
-              value={priorityFilter}
-              onChange={(e) => {
-                setPriorityFilter(e.target.value);
-                setPage(0);
-              }}
-              className="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <Select
+                value={priorityFilter}
+                onChange={(val) => {
+                  setPriorityFilter(val);
+                  setPage(0);
+                }}
+                style={{ width: 180 }}
+              >
+                <Option value="">Todas as Prioridades</Option>
+                <Option value="BAIXA">Baixa</Option>
+                <Option value="MEDIA">Média</Option>
+                <Option value="ALTA">Alta</Option>
+              </Select>
+
+              <Space.Compact>
+                <Input
+                  placeholder="ID do Resp."
+                  value={responsavelFilter}
+                  onChange={(e) => {
+                    setResponsavelFilter(e.target.value);
+                    setPage(0);
+                  }}
+                  style={{ width: 110 }}
+                  type="number"
+                  allowClear
+                />
+                {user?.id && (
+                  <Button onClick={() => {
+                    setResponsavelFilter(String(user.id));
+                    setPage(0);
+                  }}>
+                    Minhas
+                  </Button>
+                )}
+              </Space.Compact>
+            </Space>
+
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/tasks/new')}
+              style={{ backgroundColor: '#2563eb' }}
             >
-              <option value="">Todas as Prioridades</option>
-              <option value="BAIXA">Baixa</option>
-              <option value="MEDIA">Média</option>
-              <option value="ALTA">Alta</option>
-            </select>
+              Nova Tarefa
+            </Button>
           </div>
-
-          <button
-            onClick={() => router.push('/tasks/new')}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition shadow-sm"
-          >
-            + Nova Tarefa
-          </button>
-        </div>
+        </Card>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-            {error}
-          </div>
+          <Alert
+            message={error}
+            type="error"
+            showIcon
+            className="mb-6"
+          />
         )}
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-slate-500">Carregando tarefas...</div>
-          ) : tasks.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">
-              Nenhuma tarefa encontrada com os filtros selecionados.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                  <tr>
-                    <th className="p-4">Título</th>
-                    <th className="p-4">Time</th>
-                    <th className="p-4">Prioridade</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4">Prazo</th>
-                    <th className="p-4 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {tasks.map((task) => (
-                    <tr key={task.id} className="hover:bg-slate-50 transition">
-                      <td className="p-4 font-medium text-slate-800">
-                        {task.titulo}
-                        {task.descricao && (
-                          <p className="text-xs text-slate-500 font-normal line-clamp-1">
-                            {task.descricao}
-                          </p>
-                        )}
-                      </td>
-                      <td className="p-4 text-slate-600">{task.timeNome || 'Sem time'}</td>
-                      <td className="p-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            task.prioridade === 'ALTA'
-                              ? 'bg-red-100 text-red-700'
-                              : task.prioridade === 'MEDIA'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-700'
-                          }`}
-                        >
-                          {task.prioridade}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            task.status === 'CONCLUIDA'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : task.status === 'EM_ANDAMENTO'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-slate-100 text-slate-700'
-                          }`}
-                        >
-                          {task.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-slate-600">
-                        {task.dataTermino ? task.dataTermino : 'Sem prazo'}
-                      </td>
-                      <td className="p-4 text-right space-x-2">
-                        <button
-                          onClick={() => router.push(`/tasks/${task.id}/edit`)}
-                          className="text-blue-600 hover:text-blue-800 font-medium text-xs"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(task.id)}
-                          className="text-red-600 hover:text-red-800 font-medium text-xs"
-                        >
-                          Excluir
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {totalPages > 1 && (
-            <div className="p-4 border-t border-slate-200 flex justify-between items-center text-sm text-slate-600 bg-slate-50">
-              <span>
-                Página {page + 1} de {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  disabled={page === 0}
-                  onClick={() => setPage((prev) => Math.max(0, prev - 1))}
-                  className="px-3 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-40 transition"
-                >
-                  Anterior
-                </button>
-                <button
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((prev) => prev + 1)}
-                  className="px-3 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 disabled:opacity-40 transition"
-                >
-                  Próxima
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <Card bodyStyle={{ padding: 0 }} className="shadow-sm border-slate-200 overflow-hidden">
+          <Table
+            columns={columns}
+            dataSource={tasks}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              current: page + 1,
+              pageSize: 5,
+              total: totalPages * 5,
+              onChange: (newPage) => setPage(newPage - 1),
+              showSizeChanger: false,
+            }}
+          />
+        </Card>
       </main>
     </div>
   );
